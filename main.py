@@ -1,6 +1,5 @@
 import BOT
 from config import bot 
-from pyrogram import idle
 import asyncio 
 from flask import Flask
 from threading import Thread
@@ -23,9 +22,7 @@ def run_thread():
 
 async def runall():
   run_thread()
-  await bot.start()
-  idle()
-  await bot.stop()
+  await bot.infinity_polling()
 
 
 
