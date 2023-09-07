@@ -25,12 +25,12 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-data.json 
 replit.nix
 poetry.lock
 pyproject.toml
 .replit
-normalizer
+normalizer 
+data.json
 
 
 # PyInstaller
