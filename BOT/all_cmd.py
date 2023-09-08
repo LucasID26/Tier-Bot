@@ -217,7 +217,16 @@ async def groupier(m):
     await bot.reply_to(m, "Belum ada  daftar peringkat!!")
 
 
-
+@bot.message_handler(commands=['backup'])
+async def backup_data(m):
+  if m.from_user.id in own:
+    with open(file, 'r') as sumber_file:
+      data_sumber = json.load(sumber_file)
+    with open(backup, 'w') as tujuan_file:
+      json.dump(data_sumber, tujuan_file, indent=2)
+    await bot.reply_to(m, f"<code>Data dari file sumber telah disalin ke file backup.</code>")
+  else:
+    return
 
 
 
@@ -318,14 +327,5 @@ Kamu mengalami kenaikan TIER
     await save(data)
 
 
-@bot.message_handler(commands=['backup'])
-async def backup_data():
-  if m.from_user.id in own:
-    with open(file, 'r') as sumber_file:
-      data_sumber = json.load(sumber_file)
-    with open(backup, 'w') as tujuan_file:
-      json.dump(data_sumber, tujuan_file, indent=2)
-    await bot.reply_to(m, f"<code>Data dari file sumber telah disalin ke file backup.</code>")
-  else:
-    return
+
 
