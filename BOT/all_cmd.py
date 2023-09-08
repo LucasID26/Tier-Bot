@@ -1,39 +1,51 @@
-from config import bot 
+from config import bot,own
 import json 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import timezone
 from BOT.decorators import admins_only,bot_admin
 
 
-get_data = open('BOT/JSON/data.json')
-data = json.load(get_data)
+file = 'BOT/JSON/data.json'
+backup = 'BOT/JSON/backup.json'
 
 async def reset_season():
-  global data
+  data = json.load(open(file))
   for chatid in data:
     await bot.send_message(int(chatid), "<b>RESET SEASON</b>\nSilahkan push lgi tiermu dengan cara rajin kirim pesan sebanyak mungkin ;)")
     del data[chatid]
-  with open('BOT/JSON/data.json','w') as save:
-    json.dump(data, save, indent=2)
+  await save(data)
 
 reset = AsyncIOScheduler(timezone="Asia/Jakarta")
-reset.add_job(reset_season, trigger="cron",day=1, hour=0, minute=0)
+reset.add_job(reset_season, trigger="cron",minute=0, hour=0, day=1)
 print("Running PENJADWANLAN SEASON")
 reset.start()
+jobs = reset.get_jobs()
+for job in jobs:
+    print(job)
+
+async def save(data):
+  with open(file,'w') as save:
+    json.dump(data, save, indent=2)
+
+
 
 
 
 @bot.message_handler(commands=['start','help'])
 async def start(m):
-  global data
+  data = json.load(open(file))
   if m.chat.type == "private":
-    await bot.reply_to(m, f"Hallo aku adalah {(await bot.get_me()).first_name}\nAku bisa menghitung jumlah pesan yang dikirim oleh user didalam group\nAyo cek Tiermu dengan mengetikan /mytier\n\n-CATATAN: Perintah ini hanya berlaku di group!!")
+    jumlah = 0
+    for i in data:
+      jumlah += 1
+    await bot.reply_to(m, f"Hallo aku adalah {(await bot.get_me()).first_name}\nAku bisa menghitung jumlah pesan yang dikirim oleh user didalam group\nAyo cek Tiermu dengan mengetikan /mytier\n\n-CATATAN: Perintah ini hanya berlaku di group!!\n<b>Dipakai:</b> {jumlah} Group")
   else:
     await bot.reply_to(m, "Ayo cek Tiermu dengan mengetikan /mytier")
 
 
 @bot.message_handler(commands=['mytier'])
 async def tierku(m):
+  data = json.load(open(file))
   if m.chat.type == "private":
     return await bot.reply_to(m, "Maaf kamu hanya bisa melihat tiermu didalam group!!")
   userid = str(m.from_user.id)
@@ -121,7 +133,7 @@ Ayo tingkatkan aktifitas kamu di grup dengan mengirimkan pesan yang bermanfaat a
 @bot_admin
 @admins_only
 async def groupier(m):
-  global data
+  data = json.load(open(file))
   if m.chat.type == "private":
     return await bot.reply_to(m, "Maaf kamu hanya bisa melihat daftar tier didalam group!!")
  
@@ -212,7 +224,7 @@ async def groupier(m):
 
 @bot.message_handler(func=lambda message: True)
 async def save_point(m):
-  global data
+  data = json.load(open(file))
   if m.chat.type == "private":
     return
   
@@ -221,15 +233,13 @@ async def save_point(m):
   chatid = str(m.chat.id)
   if not chatid in data:
     data[chatid] = {}
-    with open('BOT/JSON/data.json','w') as save:
-      json.dump(data, save, indent=2)
+    await save(data)
   
   if userid in data[chatid]:
     new_point = 1
     old_point = data[chatid][userid]['point']
     data[chatid][userid]['point'] = old_point + new_point
-    with open('BOT/JSON/data.json','w') as save:
-      json.dump(data, save, indent=2)
+    await save(data)
 
     point = data[chatid][userid]['point']
     msg = """SELAMAT {}
@@ -305,12 +315,17 @@ Kamu mengalami kenaikan TIER
   else:
     point = 1
     data[chatid][userid] = {"nama": nama, "point": point}
-    with open('BOT/JSON/data.json','w') as save:
-      json.dump(data, save, indent=2)
+    await save(data)
 
 
-
-
-
-
+@bot.message_handler(commands=['backup'])
+async def backup_data():
+  if m.from_user.id in own:
+    with open(file, 'r') as sumber_file:
+      data_sumber = json.load(sumber_file)
+    with open(backup, 'w') as tujuan_file:
+      json.dump(data_sumber, tujuan_file, indent=2)
+    await bot.reply_to(m, f"<code>Data dari file sumber telah disalin ke file backup.</code>")
+  else:
+    return
 
